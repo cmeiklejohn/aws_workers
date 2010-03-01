@@ -7,7 +7,7 @@
 
 module AwsWorkers
 
-  # Ec2 worker.
+  # Ec2 worker
   #
   # Defines a standard S3 worker object.
   # 
@@ -16,6 +16,23 @@ module AwsWorkers
     # Accessors for access key and secret access key
     attr_accessor :ec2_access_key,
                   :ec2_secret_access_key
+
+    # Accessors for required Ec2 parameters
+    attr_accessor :ami,
+                  :min_count,
+                  :max_count,
+                  :security_group,
+                  :key_name,
+                  :addressing_type,
+                  :instance_type,
+                  :kernel_id,
+                  :ramdisk_id,
+                  :availability_zone,
+                  :monitoring_enabled,
+                  :subnet_id,
+                  :disable_api_termination,
+                  :instance_initiated_shutdown_behavior,
+                  :block_device_mappings
 
     # Creates the new Ec2 worker.
     #
@@ -74,9 +91,55 @@ module AwsWorkers
     def launch_instance
       @logger.debug("AwsWorkers::Ec2.launch_instance called")
 
-      # TODO: Launch instance.
+      # Setup defaults for things that might not have them.
+      setup_defaults
+
+      # Run the instance via right_aws
+      @logger.debug("AwsWorkers::Ec2.launch_instance launching")
+
+      @ec2.run_instances(@ami, 
+                         @min_count,
+                         @max_count,
+                         @security_group, 
+                         @key_name,
+                         user_data,
+                         @addressing_type,
+                         @instance_type,
+                         @kernel_id,
+                         @ramdisk_id,
+                         @availability_zone,
+                         @monitoring_enabled,
+                         @subnet_id,
+                         @disable_api_termination,
+                         @instance_initiated_shutdown_behavior,
+                         @block_device_mappings)
+    end
+
+    private
+
+    # Setup some defaults, for things that may or may not be specified.
+    def setup_defaults
+      @logger.debug("AwsWorkers::Ec2.setup_defaults called")
+
+      @min_count = 1                  if @min_count.blank?
+      @max_count = 1                  if @max_count.blank?
+      @security_group = 'default'     if @security_group.blank?
+      @key_name = 'default'           if @key_name.blank?
+      @addressing_type = 'public'     if @addressing_type.blank?
+      @instance_type = 'm1.small'     if @instance_type.blank?
+      # @kernel_id = nil              if @kernel_id.blank?
+      # @ramdisk_id = nil             if @ramdisk_id.blank?
+      # @availability_zone = nil      if @availability_zone.blank?
+      # @monitoring_enabled = nil     if @monitoring_enabled.blank?
+      # @subnet_id = nil              if @subnet_id.blank?
+      # @disable_api_termination = nil 
+      #                 if @disable_api_termination.blank?
+      # @instance_initiated_shutdown_behavior = nil 
+      #                 if @instance_initiated_shutdown_behavior.blank?
+      # @block_device_mappings = nil  if @block_device_mappings.blank?
     end
   
   end
 
 end
+
