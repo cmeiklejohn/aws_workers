@@ -43,13 +43,27 @@ module AwsWorkers
 
       end
 
-      # User-data
-      def user_data
-        @logger.debug("AwsWorkers::Ec2::BackupS3Buckets.user_data called")
+      private
 
-        "#!/bin/sh
-touch /tmp/a
-        "
+      # Define required software, debian package file list.
+      #
+      # Only used if the AMI requires installation of software 
+      # before code can be executed.
+      def required_packages
+        ['ruby', 'rubygems']
+      end
+
+      # Define list of required gems.
+      #
+      # Only used if the AMI requires installation of software 
+      # before code can be executed.
+      def required_gems
+        ['right_aws', 'aws_tools']
+      end
+
+      # Define method to execute on boot.
+      def method_to_execute
+        "puts 'hi'"
       end
   
     end

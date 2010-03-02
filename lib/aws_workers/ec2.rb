@@ -34,6 +34,9 @@ module AwsWorkers
                   :instance_initiated_shutdown_behavior,
                   :block_device_mappings
 
+    # Accessors for information we might need
+    attr_accessor :ami_requires_software_installation
+
     # Creates the new Ec2 worker.
     #
     # Takes a RightAws::Ec2 object.
@@ -41,17 +44,14 @@ module AwsWorkers
     # access_key and secret_access_key options 
     # are present.
     #
-    # TODO: Put in description about how to define
-    # additional workers.  Workers should subclass
-    # Ec2 (Worker).  Provide additional options,
-    # and then call the launch_instance from superclass.
-    #
     def initialize(ec2, options = {})
 
       # Call worker initalizer.
       super(options)
 
-      # Send options back.
+      # Send options back.  
+      # Probably could be migrated back into the 
+      # Worker superclass.
       options.each_pair do |key, value| 
         self.send("#{key}=", value)
       end
@@ -97,25 +97,68 @@ module AwsWorkers
       # Run the instance via right_aws
       @logger.debug("AwsWorkers::Ec2.launch_instance launching")
 
-      @ec2.run_instances(@ami, 
-                         @min_count,
-                         @max_count,
-                         @security_group, 
-                         @key_name,
-                         user_data,
-                         @addressing_type,
-                         @instance_type,
-                         @kernel_id,
-                         @ramdisk_id,
-                         @availability_zone,
-                         @monitoring_enabled,
-                         @subnet_id,
-                         @disable_api_termination,
-                         @instance_initiated_shutdown_behavior,
-                         @block_device_mappings)
+      #@ec2.run_instances(@ami, 
+      #                   @min_count,
+      #                   @max_count,
+      #                   @security_group, 
+      #                   @key_name,
+      #                   user_data,
+      #                   @addressing_type,
+      #                   @instance_type,
+      #                   @kernel_id,
+      #                   @ramdisk_id,
+      #                   @availability_zone,
+      #                   @monitoring_enabled,
+      #                   @subnet_id,
+      #                   @disable_api_termination,
+      #                   @instance_initiated_shutdown_behavior,
+      #                   @block_device_mappings)
+
+      @logger.debug("AwsWorkers::Ec2.launch_instance called with " +
+                    "user_data => \n#{user_data}")
     end
 
     private
+
+    # User data is passed on to the EC2 instance.
+    #
+    # User-data may need to install software, or may not depending 
+    # on how fully loaded the AMI is.
+    #
+    # This assumes the following
+    # * Ruby is the language of choice, currently.
+    # * The AMI is Ubuntu.
+    # 
+    def user_data
+      @user_data = ""
+
+      if @ami_requires_software_installation 
+        @user_data = <<EOF
+#!/bin/sh
+
+# Update sources list
+apt-get update
+
+# Install required debs
+apt-get install #{required_packages.join(' ')}
+
+# Install required gems
+sudo gem install #{required_gems.join(' ')}
+
+# Execute method
+/usr/bin/ruby <<EOM
+
+# Require gems
+#{required_gems.collect { |gem| "require '#{gem}'" }.join("\n")}
+
+# Method to execute
+#{method_to_execute}
+
+EOM
+EOF
+      else
+      end
+    end
 
     # Setup some defaults, for things that may or may not be specified.
     def setup_defaults
@@ -132,14 +175,15 @@ module AwsWorkers
       # @availability_zone = nil      if @availability_zone.blank?
       # @monitoring_enabled = nil     if @monitoring_enabled.blank?
       # @subnet_id = nil              if @subnet_id.blank?
-      # @disable_api_termination = nil 
-      #                 if @disable_api_termination.blank?
-      # @instance_initiated_shutdown_behavior = nil 
-      #                 if @instance_initiated_shutdown_behavior.blank?
+      # @disable_api_termination = nil \
+      #         if @disable_api_termination.blank?
+      # @instance_initiated_shutdown_behavior = nil \
+      #         if @instance_initiated_shutdown_behavior.blank?
       # @block_device_mappings = nil  if @block_device_mappings.blank?
+      @ami_requires_software_installation = false \
+                if @ami_requires_software_installation.blank?
     end
   
   end
 
 end
-
