@@ -12,6 +12,7 @@ require 'aws_workers/ec2'
 require 'aws_workers/worker'
 
 require 'aws_workers/s3/backup_bucket'
+require 'aws_workers/s3/backup_all_buckets'
 require 'aws_workers/ec2/backup_s3_buckets'
 
 module AwsWorkers #:nodoc:
