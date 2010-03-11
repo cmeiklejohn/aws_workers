@@ -97,22 +97,22 @@ module AwsWorkers
       # Run the instance via right_aws
       @logger.debug("AwsWorkers::Ec2.launch_instance launching")
 
-      #@ec2.run_instances(@ami, 
-      #                   @min_count,
-      #                   @max_count,
-      #                   @security_group, 
-      #                   @key_name,
-      #                   user_data,
-      #                   @addressing_type,
-      #                   @instance_type,
-      #                   @kernel_id,
-      #                   @ramdisk_id,
-      #                   @availability_zone,
-      #                   @monitoring_enabled,
-      #                   @subnet_id,
-      #                   @disable_api_termination,
-      #                   @instance_initiated_shutdown_behavior,
-      #                   @block_device_mappings)
+      @ec2.run_instances(@ami, 
+                         @min_count,
+                         @max_count,
+                         @security_group, 
+                         @key_name,
+                         user_data,
+                         @addressing_type,
+                         @instance_type,
+                         @kernel_id,
+                         @ramdisk_id,
+                         @availability_zone,
+                         @monitoring_enabled,
+                         @subnet_id,
+                         @disable_api_termination,
+                         @instance_initiated_shutdown_behavior,
+                         @block_device_mappings)
 
       @logger.debug("AwsWorkers::Ec2.launch_instance called with " +
                     "user_data => \n#{user_data}")
@@ -140,7 +140,7 @@ module AwsWorkers
 apt-get update
 
 # Install required debs
-apt-get install #{required_packages.join(' ')}
+apt-get -y install #{required_packages.join(' ')}
 
 # Install required gems
 sudo gem install #{required_gems.join(' ')}
@@ -149,6 +149,7 @@ sudo gem install #{required_gems.join(' ')}
 /usr/bin/ruby <<EOM
 
 # Require gems
+require 'rubygems'
 #{required_gems.collect { |gem| "require '#{gem}'" }.join("\n")}
 
 # Method to execute
@@ -157,6 +158,21 @@ sudo gem install #{required_gems.join(' ')}
 EOM
 EOF
       else
+        @user_data = <<EOF
+#!/bin/sh
+
+# Execute method
+/usr/bin/ruby <<EOM
+
+# Require gems
+require 'rubygems'
+#{required_gems.collect { |gem| "require '#{gem}'" }.join("\n")}
+
+# Method to execute
+#{method_to_execute}
+
+EOM
+EOF
       end
     end
 
