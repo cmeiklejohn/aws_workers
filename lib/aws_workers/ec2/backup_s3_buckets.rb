@@ -35,7 +35,6 @@ module AwsWorkers
       def initialize(ec2, options = {})
 
         # Superclass call, takes care of loading options
-        # hash through polymorphism.
         super(ec2, options)
 
         # Log it.
@@ -50,7 +49,7 @@ module AwsWorkers
       # Only used if the AMI requires installation of software 
       # before code can be executed.
       def required_packages
-        ['ruby', 'rubygems']
+        ['ruby', 'rubygems', 'libopenssl-ruby']
       end
 
       # Define list of required gems.
@@ -58,7 +57,7 @@ module AwsWorkers
       # Only used if the AMI requires installation of software 
       # before code can be executed.
       def required_gems
-        ['right_aws', 'aws_tools']
+        ['rubygems', 'right_aws', 'aws_tools']
       end
 
       # Define method to execute on boot.

@@ -62,7 +62,7 @@ module AwsWorkers
       end
 
     end
-  
+
   end
 
 end
