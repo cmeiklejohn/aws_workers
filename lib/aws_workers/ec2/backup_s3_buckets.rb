@@ -57,12 +57,23 @@ module AwsWorkers
       # Only used if the AMI requires installation of software 
       # before code can be executed.
       def required_gems
-        ['rubygems', 'right_aws', 'aws_tools']
+        ['rubygems', 'right_aws', 'aws_workers']
       end
 
       # Define method to execute on boot.
       def method_to_execute
-        "puts 'hi'"
+        output <<EOF
+        worker = AwsWorkers::S3::BackupAllBuckets( 
+          nil, 
+          :s
+          :s3_access_key =>         access_key, 
+          :s3_secret_access_key =>  secret_access_key,
+          :location_constraint =>   "eu",
+          :permissions =>           "public-read",
+          :backup_suffix =>         "-backup"
+        )
+EOF
+        output
       end
   
     end

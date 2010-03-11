@@ -4,7 +4,6 @@
 # Copyright:: Copyright (c) 2010 Christopher Meiklejohn
 # License:: Distributes under the terms specified in the MIT-LICENSE file.
 # 
-
 module AwsWorkers
 
   # Worker class.
