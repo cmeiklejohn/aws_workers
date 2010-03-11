@@ -149,7 +149,6 @@ sudo gem install #{required_gems.join(' ')}
 /usr/bin/ruby <<EOM
 
 # Require gems
-require 'rubygems'
 #{required_gems.collect { |gem| "require '#{gem}'" }.join("\n")}
 
 # Method to execute
