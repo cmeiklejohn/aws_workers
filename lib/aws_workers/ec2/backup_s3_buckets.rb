@@ -27,7 +27,10 @@ module AwsWorkers
       # Define accessors and options needed for this 
       # particular worker.
       attr_accessor :s3_access_key,
-                    :s3_secret_access_key
+                    :s3_secret_access_key,
+                    :location_constraint,
+                    :permissions,
+                    :backup_suffix
 
       # Call superclass initalizer, and 
       # then setup options which are local to 
@@ -65,12 +68,11 @@ module AwsWorkers
         output <<EOF
         worker = AwsWorkers::S3::BackupAllBuckets( 
           nil, 
-          :s
-          :s3_access_key =>         access_key, 
-          :s3_secret_access_key =>  secret_access_key,
-          :location_constraint =>   "eu",
-          :permissions =>           "public-read",
-          :backup_suffix =>         "-backup"
+          :s3_access_key =>         #{@access_key}, 
+          :s3_secret_access_key =>  #{@secret_access_key},
+          :location_constraint =>   #{@location_constraint},
+          :permissions =>           #{@permissions},
+          :backup_suffix =>         #{@backup_suffix}
         )
 EOF
         output
