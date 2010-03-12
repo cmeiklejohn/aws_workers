@@ -54,8 +54,14 @@ module AwsWorkers
           @logger.debug("AwsWorkers::S3.new access keys provided, " + 
                         "connecting")
           @s3 = RightAws::S3.new(s3_access_key, 
-                                 s3_secret_access_key,
-                                 :multi_thread => true)
+                                 s3_secret_access_key)
+          
+          if @s3
+            @logger.debug("AwsWorkers::S3.new connection established!")
+          else 
+            @logger.debug("AwsWorkers::S3.new connection failed!")
+          end
+
         else
           @logger.debug("AwsWorkers::S3.new no access keys, " + 
                         "unable to establish connection")

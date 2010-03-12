@@ -1,3 +1,9 @@
+# AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask
+#
+# Author:: Christopher Meiklejohn (cmeik@me.com)
+# Copyright:: Copyright (c) 2010 Christopher Meiklejohn
+# License:: Distributes under the terms specified in the MIT-LICENSE file.
+#
 require 'worker'
 
 module AwsWorkers
@@ -17,7 +23,7 @@ module AwsWorkers
         super(s3, options)
 
         # Log it.
-        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.new called")
+        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new called")
 
       end
 
@@ -25,7 +31,7 @@ module AwsWorkers
       def execute 
 
         # Perform logging.
-        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute called")
+        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute called")
 
         # First, run the setup defaults routine for any local setup 
         # that needs to happen
@@ -35,9 +41,9 @@ module AwsWorkers
         @source_bucket =      @s3.bucket(@source_bucket_name)
         @destination_bucket = @s3.bucket(@destination_bucket_name)
 
-        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                       "source bucket accessed #{source_bucket_name}") if @source_bucket
-        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                       "destination bucket accessed #{destination_bucket_name}")
                       
 
@@ -45,7 +51,7 @@ module AwsWorkers
         source_key = RightAws::S3::Key.create(@source_bucket, 
                                               @source_key_name)
 
-        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                       "working on #{@source_key_name} source_key: " + 
                       "#{source_key.to_s} source_key.exists?: " + 
                       "#{source_key.exists?}")
@@ -57,7 +63,7 @@ module AwsWorkers
         # If it exists...
         if destination_key.exists? and source_key.exists?
 
-          @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+          @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                         "#{destination_key} exists at destination")
 
           # Assess last modified time.
@@ -72,21 +78,21 @@ module AwsWorkers
           # Copy if neccessary.
           if source_date > destination_date 
 
-            @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+            @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                           "asset is newer at source, copying")
 
             source_key.copy(destination_key)
 
           else 
 
-            @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+            @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                           "asset is up to date")
 
           end
 
         else
 
-          @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.execute " + 
+          @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                         "asset does not exist, copying")
 
           source_key.copy(destination_key)
@@ -100,7 +106,7 @@ module AwsWorkers
       # Setup defaults, if destination and location are not provided.
       def setup_defaults
 
-        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBuckets.setup_defaults called")
+        @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.setup_defaults called")
 
       end
 

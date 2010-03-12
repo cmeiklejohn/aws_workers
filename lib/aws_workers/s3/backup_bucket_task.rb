@@ -4,13 +4,6 @@
 # Copyright:: Copyright (c) 2010 Christopher Meiklejohn
 # License:: Distributes under the terms specified in the MIT-LICENSE file.
 #
-# One required parameter, source_bucket_name, of S3 bucket to syncrhonize.
-# 
-# Two optional parameters:
-#  destination_bucket_name: destination_bucket_name, defaults to 
-#   source_bucket_name-backup
-#  location_constraint: defaults to US-Standard
-#
 require 'worker'
 
 module AwsWorkers
@@ -68,9 +61,6 @@ module AwsWorkers
         @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
                       "destination bucket accessed #{destination_bucket_name} " + 
                       "#{permissions} #{location_constraint} ") if @destination_bucket
-
-        # Setup fork count
-        fork_count = 0
 
         @source_bucket.keys.each do |source_key| 
 
