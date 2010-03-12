@@ -1,4 +1,4 @@
-# AwsWorkers::Ec2::BackupS3Buckets
+# AwsWorkers::Ec2::BackupS3BucketsTask
 #
 # Author:: Christopher Meiklejohn (cmeik@me.com)
 # Copyright:: Copyright (c) 2010 Christopher Meiklejohn
@@ -10,7 +10,7 @@ module AwsWorkers
   class Ec2 < Worker
     # Subclassed worker.
 
-    # BackupS3Buckets
+    # BackupS3BucketsTask
     #
     # Defines a worker which will launch a Ec2 
     # instance that will backup all S3 buckets.
@@ -22,7 +22,7 @@ module AwsWorkers
     # Ec2 instance as user-data (which is executed
     # on boot as root).
     #
-    class BackupS3Buckets < Ec2
+    class BackupS3BucketsTask < Ec2
 
       # Define accessors and options needed for this 
       # particular worker.
@@ -41,7 +41,7 @@ module AwsWorkers
         super(ec2, options)
 
         # Log it.
-        @logger.debug("AwsWorkers::Ec2::BackupS3Buckets.new called")
+        @logger.debug("AwsWorkers::Ec2::BackupS3BucketsTask.new called")
 
       end
 
@@ -66,7 +66,7 @@ module AwsWorkers
       # Define method to execute on boot.
       def method_to_execute
         output <<EOF
-        worker = AwsWorkers::S3::BackupAllBuckets( 
+        worker = AwsWorkers::S3::BackupAllBucketsTask( 
           nil, 
           :s3_access_key =>         #{@access_key}, 
           :s3_secret_access_key =>  #{@secret_access_key},

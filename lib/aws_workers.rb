@@ -10,9 +10,10 @@ require 'aws_workers/s3'
 require 'aws_workers/ec2'
 require 'aws_workers/worker'
 
-require 'aws_workers/s3/backup_bucket'
-require 'aws_workers/s3/backup_all_buckets'
-require 'aws_workers/ec2/backup_s3_buckets'
+require 'aws_workers/s3/backup_bucket_task'
+require 'aws_workers/s3/backup_all_buckets_task'
+require 'aws_workers/s3/synchronize_asset_between_buckets_task'
+require 'aws_workers/ec2/backup_s3_buckets_task'
 
 module AwsWorkers #:nodoc:
   module VERSION #:nodoc:
