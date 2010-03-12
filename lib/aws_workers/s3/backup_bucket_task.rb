@@ -62,25 +62,81 @@ module AwsWorkers
                       "destination bucket accessed #{destination_bucket_name} " + 
                       "#{permissions} #{location_constraint} ") if @destination_bucket
 
-        @source_bucket.keys.each do |source_key| 
+        # Set up the queue.
+        q = Queue.new
 
-          # Call asset synchronization worker.
-          # 
-          # Even though we have a connection, call with nil anyway, because we
-          # are going to have to fork, which will require a new
-          # connection.
-          asset_worker =
-            AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
-              nil,
-              :s3_access_key => @s3_access_key,
-              :s3_secret_access_key => @s3_secret_access_key,
-              :source_key_name => source_key.to_s,
-              :source_bucket_name => @source_bucket.to_s,
-              :destination_bucket_name => @destination_bucket.to_s
-          )
-          asset_worker.execute
+        # Iterate over the bucket.
+        @source_bucket.keys.each do |source_key|
+
+          # If the queue size is too big, sleep for a bit...
+          while q.size > 10
+            @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                          "sleeping because queue is too full " + 
+                          "#{q.size}")
+            sleep 1
+          end
+
+          # Create the thread to run the backup in.
+          worker = Thread.new do
+
+            # Add it to the queue prior to execution...
+            #q.push(asset_worker)
+            #
+            # This used to add the asset worker to the queue but then
+            # there would be more than the allowed size running.  This
+            # is because the time it would take for the queue to fill
+            # up.  It seems that 18 threads could get launched before
+            # the code caught the queue at 10, since it added to the
+            # queue so late in the process.  Since we're treating this
+            # as more of a count semaphore, and we don't need the entire
+            # sync object in memory, just add a boolean 1 into the
+            # queue.
+            q.push(1)
+
+            @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                          "executing sync in thread, adding new " + 
+                          "worker to the queue")
+
+            # Call asset synchronization worker.
+            # 
+            # Even though we have a connection, call with nil anyway, because we
+            # are going to have to fork, which will require a new
+            # connection.
+            asset_worker =
+              AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
+                nil,
+                :s3_access_key => @s3_access_key,
+                :s3_secret_access_key => @s3_secret_access_key,
+                :source_key_name => source_key.to_s,
+                :source_bucket_name => @source_bucket.to_s,
+                :destination_bucket_name => @destination_bucket.to_s
+            )
+
+
+            # Remove me
+            @logger.debug("AwsWorker::S3::BackupBucketTask.execute " + 
+                          "added to worker queue, current queue " + 
+                          "size: #{q.size}")
+
+            # Execute!
+            asset_worker.execute
+
+            # Remove it from the queue once execution is complete.
+            q.pop
+  
+          end
 
         end
+
+        # Wait for all of them to finish up!
+        until q.empty?
+          @logger.debug("AwsWorker::S3::BackupBucketTask.execute " + 
+                        "queue not empty, waiting: #{q.size}")
+          sleep 1
+        end
+
+        @logger.debug("AwsWorkers::S3::BackupBucketTask.execute queue " +
+                      "size after loop iteration: #{q.size}")
 
       end
 
