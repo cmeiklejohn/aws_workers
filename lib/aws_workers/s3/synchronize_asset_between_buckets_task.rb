@@ -12,7 +12,7 @@ module AwsWorkers
 
     class SynchronizeAssetBetweenBucketsTask < S3
 
-      # TO-DO: setup_defaults need to raise exceptions if these are not
+      # TODO: setup_defaults need to raise exceptions if these are not
       # present
       attr_accessor :source_key_name,
                     :source_bucket_name,

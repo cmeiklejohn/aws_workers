@@ -69,15 +69,17 @@ module AwsWorkers
         @source_bucket.keys.each do |source_key|
 
           # If the queue size is too big, sleep for a bit...
-          while q.size > 10
+          # TODO: Abstract this out
+          while q.size >= 50
             @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
                           "sleeping because queue is too full " + 
                           "#{q.size}")
             sleep 1
           end
 
-          # Create the thread to run the backup in.
-          worker = Thread.new do
+          # Create the thread to run the backup in.  Add this thread to
+          # the worker, pop inside the thread to maintain thread count.
+          q << Thread.new do
 
             # Add it to the queue prior to execution...
             #q.push(asset_worker)
@@ -91,7 +93,9 @@ module AwsWorkers
             # as more of a count semaphore, and we don't need the entire
             # sync object in memory, just add a boolean 1 into the
             # queue.
-            q.push(1)
+            #q.push(1)
+
+            # See above.
 
             @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
                           "executing sync in thread, adding new " + 
@@ -114,7 +118,7 @@ module AwsWorkers
 
 
             # Remove me
-            @logger.debug("AwsWorker::S3::BackupBucketTask.execute " + 
+            @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
                           "added to worker queue, current queue " + 
                           "size: #{q.size}")
 
@@ -130,7 +134,7 @@ module AwsWorkers
 
         # Wait for all of them to finish up!
         until q.empty?
-          @logger.debug("AwsWorker::S3::BackupBucketTask.execute " + 
+          @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
                         "queue not empty, waiting: #{q.size}")
           sleep 1
         end
