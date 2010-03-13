@@ -4,14 +4,13 @@
 # Copyright:: Copyright (c) 2010 Christopher Meiklejohn
 # License:: Distributes under the terms specified in the MIT-LICENSE file.
 #
-require 'worker'
-
 module AwsWorkers
 
   class S3 < Worker
 
-    # Ensures that one asset exists in both a source and destination
-    # bucket.  Also makes sure that this asset is up to date.
+    # Verifies that an asset exists both in a source bucket
+    # and destination bucket.  Copies asset if it needs to be 
+    # brought up to date.
     class SynchronizeAssetBetweenBucketsTask < S3
 
       attr_accessor :source_key_name,
@@ -108,12 +107,14 @@ module AwsWorkers
 
         @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.setup_defaults called")
 
-        # Just runtime exceptions for now...
-        raise "s3 connection failed" unless @s3
+        raise "S3 connection does not exist." if @s3.blank?
 
-        raise "source key missing" if @source_key_name.blank?
-        raise "source bucket missing" if @source_bucket_name.blank?
-        raise "destination bucket missing" if @destination_bucket_name.blank?
+        raise "Source key not provided." if @source_key_name.blank?
+        raise "Source bucket name not provided." if @source_bucket_name.blank?
+        raise "Destination bucket name not provided." if @destination_bucket_name.blank?
+
+        # Any other errors, such as a 404 or bucket not found will be
+        # handled by right_aws
 
       end
 
