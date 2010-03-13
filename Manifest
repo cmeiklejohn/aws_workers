@@ -1,0 +1,11 @@
+Manifest
+README.rdoc
+Rakefile
+lib/aws_workers.rb
+lib/aws_workers/ec2.rb
+lib/aws_workers/ec2/backup_s3_buckets_task.rb
+lib/aws_workers/s3.rb
+lib/aws_workers/s3/backup_all_buckets_task.rb
+lib/aws_workers/s3/backup_bucket_task.rb
+lib/aws_workers/s3/synchronize_asset_between_buckets_task.rb
+lib/aws_workers/worker.rb
