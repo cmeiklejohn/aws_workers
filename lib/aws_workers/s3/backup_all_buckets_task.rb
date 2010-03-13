@@ -12,12 +12,11 @@ module AwsWorkers
 
     class BackupAllBucketsTask < S3
 
-      # To-Do: null locationconstraint needs to raise exception
-
       # Attributes specific to this call.
       attr_accessor :location_constraint,
                     :permissions,
-                    :backup_suffix
+                    :backup_suffix,
+                    :max_thread_count
 
       # Call superclass initalizer, and 
       # then setup options that are local 
@@ -63,7 +62,8 @@ module AwsWorkers
               :location_constraint => @location_constraint,
               :permissions => @permissions,
               :source_bucket_name => source_bucket.to_s,
-              :destination_bucket_name => destination_bucket_name
+              :destination_bucket_name => destination_bucket_name,
+              :max_thread_count => @max_thread_count
             )
 
             sync_worker.execute
@@ -82,9 +82,10 @@ module AwsWorkers
         @logger.debug("AwsWorkers::S3::BackupAllBucketsTask.setup_defaults called")
     
         # Location constraint defaults to blank
-        @location_constraint = "" if @location_constraint.blank?
         @permissions = 'public-read' if @permissions.blank?
         @backup_suffix = '-backup' if @backup_suffix.blank?
+
+        raise "null location constraint" if @location_constraint.blank?
 
       end
 

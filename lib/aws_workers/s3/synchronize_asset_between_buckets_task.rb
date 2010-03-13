@@ -10,10 +10,10 @@ module AwsWorkers
 
   class S3 < Worker
 
+    # Ensures that one asset exists in both a source and destination
+    # bucket.  Also makes sure that this asset is up to date.
     class SynchronizeAssetBetweenBucketsTask < S3
 
-      # TODO: setup_defaults need to raise exceptions if these are not
-      # present
       attr_accessor :source_key_name,
                     :source_bucket_name,
                     :destination_bucket_name
@@ -107,6 +107,13 @@ module AwsWorkers
       def setup_defaults
 
         @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.setup_defaults called")
+
+        # Just runtime exceptions for now...
+        raise "s3 connection failed" unless @s3
+
+        raise "source key missing" if @source_key_name.blank?
+        raise "source bucket missing" if @source_bucket_name.blank?
+        raise "destination bucket missing" if @destination_bucket_name.blank?
 
       end
 

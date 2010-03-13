@@ -10,18 +10,8 @@ module AwsWorkers
   class Ec2 < Worker
     # Subclassed worker.
 
-    # BackupS3BucketsTask
-    #
     # Defines a worker which will launch a Ec2 
     # instance that will backup all S3 buckets.
-    #
-    # Subclasses of Ec2 Workers must implement
-    # a initalizer, att_accessors for information
-    # required to pass through to the instance, and
-    # user_data routine which is passed into the 
-    # Ec2 instance as user-data (which is executed
-    # on boot as root).
-    #
     class BackupS3BucketsTask < Ec2
 
       # Define accessors and options needed for this 
@@ -30,7 +20,8 @@ module AwsWorkers
                     :s3_secret_access_key,
                     :location_constraint,
                     :permissions,
-                    :backup_suffix
+                    :backup_suffix,
+                    :max_thread_count
 
       # Call superclass initalizer, and 
       # then setup options which are local to 
@@ -73,6 +64,7 @@ module AwsWorkers
           :location_constraint =>   #{@location_constraint},
           :permissions =>           #{@permissions},
           :backup_suffix =>         #{@backup_suffix}
+          :max_thread_count =>      #{@max_thread_count}
         )
 EOF
         output

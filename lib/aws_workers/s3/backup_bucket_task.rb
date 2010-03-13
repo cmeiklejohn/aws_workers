@@ -9,21 +9,18 @@ require 'worker'
 module AwsWorkers
 
   class S3 < Worker
-    # Subclassed worker.
 
-    # BackupBucketTask
-    #
     # Defines a worker which will copy all new or 
     # changed assets from one S3 bucket to another S3 
     # bucket.
-    # 
     class BackupBucketTask < S3
 
       # Accessors for information specific to backup bucket processing.
       attr_accessor :source_bucket_name,
                     :destination_bucket_name,
                     :permissions,
-                    :location_constraint
+                    :location_constraint,
+                    :max_thread_count
 
       # Call superclass initalizer, and 
       # then setup options that are local 
@@ -69,8 +66,7 @@ module AwsWorkers
         @source_bucket.keys.each do |source_key|
 
           # If the queue size is too big, sleep for a bit...
-          # TODO: Abstract this out
-          while q.size >= 50
+          while q.size >= @max_thread_count
             @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
                           "sleeping because queue is too full " + 
                           "#{q.size}")
@@ -154,10 +150,12 @@ module AwsWorkers
         @destination_bucket_name = "#{source_bucket_name}-backup" \
           if @destination_bucket_name.blank?
         @permissions = 'private' if @permissions.blank?
+        @max_thread_count = 1 if @max_thread_count.blank?
 
-        # Blank location constraint is default, via Amazon API.
-        #@location_constraint = "eu" \
-        #  if @location_constraint.blank?
+        raise "s3 connection failed" unless @s3
+
+        raise "source bucket missing" if @source_bucket_name.blank?
+        raise "null location constraint" if @location_constraint.blank?
 
       end
 
