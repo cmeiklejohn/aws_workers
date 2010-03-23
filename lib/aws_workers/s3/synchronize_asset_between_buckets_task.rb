@@ -40,11 +40,18 @@ module AwsWorkers
         @source_bucket =      @s3.bucket(@source_bucket_name)
         @destination_bucket = @s3.bucket(@destination_bucket_name)
 
+        if !@source_bucket
+          raise "Source bucket does not exist."
+        end
+
+        if !@destination_bucket
+          raise "Destination bucket does not exist."
+        end
+
         @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                       "source bucket accessed #{source_bucket_name}") if @source_bucket
         @logger.debug("AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.execute " + 
                       "destination bucket accessed #{destination_bucket_name}")
-                      
 
         # Get source key
         source_key = RightAws::S3::Key.create(@source_bucket, 
@@ -58,6 +65,10 @@ module AwsWorkers
         # Look for destination key
         destination_key = RightAws::S3::Key.create(@destination_bucket, 
                                                    source_key.to_s)
+
+        if !source_key.exists?
+          raise "Source file not found."
+        end
 
         # If it exists...
         if destination_key.exists? and source_key.exists?
