@@ -48,6 +48,11 @@ module AwsWorkers
 
         # Get handles to both buckets.
         @source_bucket =      @s3.bucket(@source_bucket_name)
+
+        if !@source_bucket 
+          raise "Source bucket does not exist."
+        end
+
         @destination_bucket = @s3.bucket(@destination_bucket_name,
                                          true,
                                          @permissions,
@@ -147,16 +152,11 @@ module AwsWorkers
 
         @logger.debug("AwsWorkers::S3::BackupBucketTask.setup_defaults called")
 
-        @destination_bucket_name = "#{source_bucket_name}-backup" \
-          if @destination_bucket_name.blank?
         @permissions = 'private' if @permissions.blank?
         @max_thread_count = 1 if @max_thread_count.blank?
 
-        raise "s3 connection failed" unless @s3
-
-        raise "source bucket missing" if @source_bucket_name.blank?
-        raise "null location constraint" if @location_constraint.blank?
-
+        raise "Source bucket missing." if @source_bucket_name.blank?
+        raise "Destination bucket missing." if @destination_bucket_name.blank?
       end
 
     end

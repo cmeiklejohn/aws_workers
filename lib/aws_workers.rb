@@ -13,8 +13,8 @@ require 'aws_workers/worker'
 
 # S3 tasks
 require 'aws_workers/s3/backup_bucket_task'
-require 'aws_workers/s3/backup_all_buckets_task'
 require 'aws_workers/s3/synchronize_asset_between_buckets_task'
+require 'aws_workers/s3/backup_all_buckets_to_specified_location_task'
 
 # EC2 tasks
 require 'aws_workers/ec2/backup_s3_buckets_task'
