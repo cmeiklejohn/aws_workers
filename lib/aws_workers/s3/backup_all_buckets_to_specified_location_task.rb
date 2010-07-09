@@ -94,7 +94,7 @@ module AwsWorkers
 
         @logger.debug("AwsWorkers::S3::BackupAllBucketsToSpecifiedLocationTask.setup_defaults " +
                       "called")
-    
+ 
         @permissions =        'public-read' if @permissions.blank?
         @backup_suffix =      '-backup'     if @backup_suffix.blank?
         @max_thread_count =   1             if @max_thread_count.blank?

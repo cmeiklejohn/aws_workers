@@ -6,6 +6,9 @@
 # 
 $:.unshift(File.dirname(__FILE__))
 
+# Externla libraries
+require 'logger'
+
 # Main libraries
 require 'aws_workers/s3'
 require 'aws_workers/ec2'
@@ -17,7 +20,7 @@ require 'aws_workers/s3/synchronize_asset_between_buckets_task'
 require 'aws_workers/s3/backup_all_buckets_to_specified_location_task'
 
 # EC2 tasks
-require 'aws_workers/ec2/backup_s3_buckets_task'
+require 'aws_workers/ec2/backup_all_buckets_to_specified_location_task'
 
 module AwsWorkers #:nodoc:
   module VERSION #:nodoc:

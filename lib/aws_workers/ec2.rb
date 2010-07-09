@@ -75,8 +75,8 @@ module AwsWorkers
         if @ec2_access_key and @ec2_secret_access_key
           @logger.debug("AwsWorkers::Ec2.new access keys provided, " + 
                         "connecting")
-          @ec2 = RightAws::Ec2.new(ec2_access_key, 
-                                   ec2_secret_access_key)
+          @ec2 = Aws::Ec2.new(ec2_access_key, 
+                              ec2_secret_access_key)
         else
           @logger.debug("AwsWorkers::Ec2.new no access keys, " + 
                         "unable to establish connection")

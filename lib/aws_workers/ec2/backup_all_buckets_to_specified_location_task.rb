@@ -1,4 +1,4 @@
-# AwsWorkers::Ec2::BackupS3BucketsTask
+# AwsWorkers::Ec2::BackupAllBucketsToSpecifiedLocationTask
 #
 # Author:: Christopher Meiklejohn (cmeik@me.com)
 # Copyright:: Copyright (c) 2010 Christopher Meiklejohn
@@ -12,7 +12,7 @@ module AwsWorkers
 
     # Defines a worker which will launch a Ec2 
     # instance that will backup all S3 buckets.
-    class BackupS3BucketsTask < Ec2
+    class BackupAllBucketsToSpecifiedLocationTask < Ec2
 
       # Define accessors and options needed for this 
       # particular worker.
@@ -32,7 +32,7 @@ module AwsWorkers
         super(ec2, options)
 
         # Log it.
-        @logger.debug("AwsWorkers::Ec2::BackupS3BucketsTask.new called")
+        @logger.debug("AwsWorkers::Ec2::BackupAllBucketsToSpecifiedLocationTask.new called")
 
       end
 
@@ -51,13 +51,13 @@ module AwsWorkers
       # Only used if the AMI requires installation of software 
       # before code can be executed.
       def required_gems
-        ['rubygems', 'right_aws', 'aws_workers']
+        ['rubygems', 'cmeiklejohn-aws', 'aws_workers']
       end
 
       # Define method to execute on boot.
       def method_to_execute
-        output <<EOF
-        worker = AwsWorkers::S3::BackupAllBucketsTask( 
+        output = <<EOF
+        worker = AwsWorkers::S3::BackupAllBucketsToSpecifiedLocationTask( 
           nil, 
           :s3_access_key =>         #{@access_key}, 
           :s3_secret_access_key =>  #{@secret_access_key},

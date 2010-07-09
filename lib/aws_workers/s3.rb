@@ -53,7 +53,7 @@ module AwsWorkers
         if @s3_access_key and @s3_secret_access_key
           @logger.debug("AwsWorkers::S3.new access keys provided, " + 
                         "connecting")
-          @s3 = RightAws::S3.new(s3_access_key, 
+          @s3 = Aws::S3.new(s3_access_key, 
                                  s3_secret_access_key)
           
           if @s3
