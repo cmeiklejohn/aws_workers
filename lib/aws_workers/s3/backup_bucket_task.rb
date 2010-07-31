@@ -47,10 +47,10 @@ module AwsWorkers
         setup_defaults
 
         # Get handles to both buckets.
-        @source_bucket =      @s3.bucket(@source_bucket_name)
+        @source_bucket = @s3.bucket(@source_bucket_name)
 
         if !@source_bucket 
-          raise "Source bucket does not exist."
+          raise "Source bucket #{@source_bucket_name} does not exist."
         end
 
         @destination_bucket = @s3.bucket(@destination_bucket_name,
@@ -65,83 +65,62 @@ module AwsWorkers
                       "#{permissions} #{location_constraint} ") if @destination_bucket
 
         # Set up the queue.
-        q = Queue.new
+        key_queue = Queue.new
+        thread_queue = Queue.new
 
-        # Iterate over the bucket.
+        # Iterate over keys, and put them in the queue
         @source_bucket.keys.each do |source_key|
-
-          # If the queue size is too big, sleep for a bit...
-          while q.size >= @max_thread_count
-            @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
-                          "sleeping because queue is too full " + 
-                          "#{q.size}")
-            sleep 1
-          end
-
-          # Create the thread to run the backup in.  Add this thread to
-          # the worker, pop inside the thread to maintain thread count.
-          q << Thread.new do
-
-            # Add it to the queue prior to execution...
-            #q.push(asset_worker)
-            #
-            # This used to add the asset worker to the queue but then
-            # there would be more than the allowed size running.  This
-            # is because the time it would take for the queue to fill
-            # up.  It seems that 18 threads could get launched before
-            # the code caught the queue at 10, since it added to the
-            # queue so late in the process.  Since we're treating this
-            # as more of a count semaphore, and we don't need the entire
-            # sync object in memory, just add a boolean 1 into the
-            # queue.
-            #q.push(1)
-
-            # See above.
-
-            @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
-                          "executing sync in thread, adding new " + 
-                          "worker to the queue")
-
-            # Call asset synchronization worker.
-            # 
-            # Even though we have a connection, call with nil anyway, because we
-            # are going to have to fork, which will require a new
-            # connection.
-            asset_worker =
-              AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
-                nil,
-                :s3_access_key => @s3_access_key,
-                :s3_secret_access_key => @s3_secret_access_key,
-                :source_key_name => source_key.to_s,
-                :source_bucket_name => @source_bucket.to_s,
-                :destination_bucket_name => @destination_bucket.to_s
-            )
-
-
-            # Remove me
-            @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
-                          "added to worker queue, current queue " + 
-                          "size: #{q.size}")
-
-            # Execute!
-            asset_worker.execute
-
-            # Remove it from the queue once execution is complete.
-            q.pop
-  
-          end
-
+          key_queue << source_key
         end
 
-        # Wait for all of them to finish up!
-        until q.empty?
+        # Print the queue size
+        @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                      "Queue size: #{key_queue.size}")
+
+        # Launch the proper number of threads.
+        1.upto(@max_thread_count) do
           @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
-                        "queue not empty, waiting: #{q.size}")
-          sleep 1
+                        "Launching thread...")
+
+          # Create the thread
+          thread_queue << Thread.new do 
+
+            # Thread will continuously pop keys off the queue and work
+            # them.
+            until key_queue.empty?
+              source_key = key_queue.pop
+
+              @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                            "Working on key: #{source_key}")
+
+              # Create the asset worker
+              asset_worker =
+                AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
+                  nil,
+                  :s3_access_key => @s3_access_key,
+                  :s3_secret_access_key => @s3_secret_access_key,
+                  :source_key_name => source_key.to_s,
+                  :source_bucket_name => @source_bucket.to_s,
+                  :destination_bucket_name => @destination_bucket.to_s
+              )
+
+              # Begin the synchronization
+              asset_worker.execute
+            end
+          end
         end
 
-        @logger.debug("AwsWorkers::S3::BackupBucketTask.execute queue " +
-                      "size after loop iteration: #{q.size}")
+        # Wait for all of the threads to finish
+        until thread_queue.empty?
+          # Pop thread off queue
+          thread = thread_queue.pop
+
+          @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                        "Waiting for thread: #{thread.inspect}")
+
+          # Join thread to main thread
+          thread.join
+        end
 
       end
 
