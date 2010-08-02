@@ -90,22 +90,43 @@ module AwsWorkers
             until key_queue.empty?
               source_key = key_queue.pop
 
-              @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
-                            "Working on key: #{source_key}")
+              begin
+                @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                              "Working on key: #{source_key}")
 
-              # Create the asset worker
-              asset_worker =
-                AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
-                  nil,
-                  :s3_access_key => @s3_access_key,
-                  :s3_secret_access_key => @s3_secret_access_key,
-                  :source_key_name => source_key.to_s,
-                  :source_bucket_name => @source_bucket.to_s,
-                  :destination_bucket_name => @destination_bucket.to_s
-              )
+                # Create the asset worker
+                asset_worker =
+                  AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
+                    nil,
+                    :s3_access_key => @s3_access_key,
+                    :s3_secret_access_key => @s3_secret_access_key,
+                    :source_key_name => source_key.to_s,
+                    :source_bucket_name => @source_bucket.to_s,
+                    :destination_bucket_name => @destination_bucket.to_s
+                )
 
-              # Begin the synchronization
-              asset_worker.execute
+                # Begin the synchronization
+                asset_worker.execute
+              rescue 
+                # Attempt one more time in the event of an 
+                # exception for a 500 server error.
+                @logger.debug("AwsWorkers::S3::BackupBucketTask.execute " + 
+                              "Exception, retrying key: #{source_key}")
+
+                # Create the asset worker
+                asset_worker =
+                  AwsWorkers::S3::SynchronizeAssetBetweenBucketsTask.new(
+                    nil,
+                    :s3_access_key => @s3_access_key,
+                    :s3_secret_access_key => @s3_secret_access_key,
+                    :source_key_name => source_key.to_s,
+                    :source_bucket_name => @source_bucket.to_s,
+                    :destination_bucket_name => @destination_bucket.to_s
+                )
+
+                # Begin the synchronization
+                asset_worker.execute
+              end
             end
           end
         end
